@@ -15,7 +15,7 @@ on:
 
       instance_ami:
         type: string
-        description: 'Add nstance ami'
+        description: 'Add instance ami'
         required: true
 
 jobs:
