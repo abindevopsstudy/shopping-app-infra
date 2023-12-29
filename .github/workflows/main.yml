@@ -1,0 +1,73 @@
+---
+name: "Flipkart prod infra build with workflow_dispatch"
+
+on:
+
+  workflow_dispatch:
+    inputs:
+
+      instance_type:
+        type: choice
+        description: "select instance type"
+        options: 
+        - t2.micro
+        - t2.small
+
+      instance_ami:
+        type: string
+        description: 'Add nstance ami'
+        required: true
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+        
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.PROD_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_SECRET_KEY }}
+      AWS_REGION: ${{ secrets.PROD_REGION }}
+
+    steps:
+
+      - name: "Repository Checkout"
+        uses: actions/checkout@v3
+
+
+      - name: "Terraform Installation"
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.2
+     
+      - name: "Terraform init"
+        run: |
+           terraform init \
+               -backend-config="bucket=${{ secrets.PROD_S3_BUCKET }}" \
+               -backend-config="key=terraform.tfstate" \
+               -backend-config="region=${{ secrets.PROD_REGION }}" \
+               -backend-config="access_key=${{ secrets.PROD_ACCESS_KEY }}" \
+               -backend-config="secret_key=${{ secrets.PROD_SECRET_KEY }}" \
+            
+            
+      - name: "Terraform fmt"
+        run: terraform fmt        
+          
+
+      - name: "Terraform validate"
+        run: terraform validate
+
+
+      - name: "Terraform plan"
+        run: |
+             terraform plan \
+               -var "instance_type=${{ github.event.inputs.instance_type }}" \
+               -var "instance_ami=${{ github.event.inputs.instance_ami }}"
+        
+
+      - name: "Terraform apply"
+        run: |
+             terraform apply \
+               -auto-approve \
+               -var "instance_type=${{ github.event.inputs.instance_type }}" \
+               -var "instance_ami=${{ github.event.inputs.instance_ami }}"
+

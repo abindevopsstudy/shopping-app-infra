@@ -1,0 +1,5 @@
+project_name     = "flipkart"
+project_env      = "prod"
+hosted_zone_name = "abinsunny.online"
+hosted_zone_id   = "Z01918021LAHD7500H44V"
+hostname         = "flipkart"
